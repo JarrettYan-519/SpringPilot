@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import settings
 from backend.database import engine, Base
 from backend.routers import applications, study_tasks, weight, diet, training
-from backend.routers import settings as settings_router, ai
+from backend.routers import settings as settings_router, ai, trainer_plans
 import os
 
 Base.metadata.create_all(bind=engine)
@@ -26,6 +26,7 @@ app.include_router(diet.router)
 app.include_router(training.router)
 app.include_router(settings_router.router)
 app.include_router(ai.router)
+app.include_router(trainer_plans.router)
 
 
 @app.get("/api/health")
