@@ -34,3 +34,16 @@ def test_create_user_config(db):
     db.add(config)
     db.commit()
     assert db.query(UserConfig).filter_by(key="height_cm").first().value == "178"
+
+
+from backend.schemas.job import ApplicationCreate, ApplicationRead
+from backend.schemas.fitness import WeightRecordCreate
+
+def test_application_schema_validation():
+    data = ApplicationCreate(company="腾讯", position="前端工程师")
+    assert data.status == "Pending"
+    assert data.channel is None
+
+def test_weight_schema_validation():
+    data = WeightRecordCreate(weight_kg=75.0)
+    assert data.weight_kg == 75.0
