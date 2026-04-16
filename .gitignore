@@ -5,3 +5,5 @@ __pycache__/
 *.db
 uploads/
 .DS_Store
+node_modules/
+dist/
