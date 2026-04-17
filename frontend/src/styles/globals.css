@@ -1,0 +1,49 @@
+/* Background mesh — soft radial gradients to give frosted glass something to blur */
+body {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(at 12% 8%, rgba(99, 102, 241, 0.10) 0px, transparent 45%),
+    radial-gradient(at 88% 16%, rgba(236, 72, 153, 0.08) 0px, transparent 42%),
+    radial-gradient(at 72% 92%, rgba(20, 184, 166, 0.08) 0px, transparent 45%);
+  background-attachment: fixed;
+}
+
+/* Typography utilities */
+.heading-1 { font-size: var(--text-3xl); font-weight: 700; line-height: var(--leading-tight); letter-spacing: -0.02em; }
+.heading-2 { font-size: var(--text-2xl); font-weight: 600; line-height: var(--leading-tight); letter-spacing: -0.015em; }
+.heading-3 { font-size: var(--text-xl); font-weight: 600; line-height: var(--leading-tight); }
+.text-muted { color: var(--color-text-muted); }
+.text-subtle { color: var(--color-text-subtle); }
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Scrollbar — refined */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(24, 24, 27, 0.12); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(24, 24, 27, 0.2); background-clip: padding-box; border: 2px solid transparent; }
+
+/* Animation keyframes reused across components */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideDown { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Fade/slide entrance helper */
+.enter-fade { animation: fadeIn var(--duration-base) var(--ease-out); }
+.enter-up { animation: slideUp var(--duration-base) var(--ease-out); }
+
+/* Layout helpers */
+.stack { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; }
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.gap-5 { gap: var(--space-5); }
+.gap-6 { gap: var(--space-6); }
