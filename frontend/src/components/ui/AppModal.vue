@@ -1,52 +1,74 @@
 <script setup>
-import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
-defineProps({
+const props = defineProps({
   open: { type: Boolean, default: false },
   title: { type: String, default: '' },
-  size: { type: String, default: 'md' }, // sm | md | lg
+  size: { type: String, default: 'md' },
 })
 const emit = defineEmits(['close'])
+
+const panelRef = ref(null)
+const previouslyFocused = ref(null)
+
+function onOverlayClick(e) {
+  if (e.target === e.currentTarget) emit('close')
+}
+
+function onKeydown(e) {
+  if (e.key === 'Escape') emit('close')
+}
+
+watch(() => props.open, async (val) => {
+  if (val) {
+    previouslyFocused.value = document.activeElement
+    document.addEventListener('keydown', onKeydown)
+    document.body.style.overflow = 'hidden'
+    await nextTick()
+    panelRef.value?.focus()
+  } else {
+    document.removeEventListener('keydown', onKeydown)
+    document.body.style.overflow = ''
+    previouslyFocused.value?.focus()
+  }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
 </script>
 
 <template>
-  <transition name="modal-fade">
-    <Dialog v-if="open" as="div" class="modal" @close="emit('close')">
-      <div class="modal-overlay" aria-hidden="true" />
-      <div class="modal-container">
-        <transition name="modal-pop" appear>
-          <DialogPanel class="modal-panel" :class="`modal-panel--${size}`">
-            <header v-if="title" class="modal-header">
-              <DialogTitle class="modal-title">{{ title }}</DialogTitle>
-              <button class="modal-close" aria-label="关闭" @click="emit('close')">×</button>
-            </header>
-            <div class="modal-body"><slot /></div>
-            <footer v-if="$slots.footer" class="modal-footer"><slot name="footer" /></footer>
-          </DialogPanel>
-        </transition>
+  <Teleport to="body">
+    <div v-if="open" class="modal" role="dialog" aria-modal="true">
+      <div class="modal-overlay" @click="onOverlayClick" />
+      <div class="modal-panel" ref="panelRef" tabindex="-1" :class="`modal-panel--${size}`" @click.stop>
+        <header v-if="title" class="modal-header">
+          <h2 class="modal-title">{{ title }}</h2>
+          <button class="modal-close" aria-label="关闭" @click="emit('close')">×</button>
+        </header>
+        <div class="modal-body"><slot /></div>
+        <footer v-if="$slots.footer" class="modal-footer"><slot name="footer" /></footer>
       </div>
-    </Dialog>
-  </transition>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
-.modal { position: fixed; inset: 0; z-index: var(--z-modal); }
+.modal {
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-5);
+}
 .modal-overlay {
-  position: absolute; inset: 0;
+  position: fixed; inset: 0;
   background: rgba(24, 24, 27, 0.32);
   backdrop-filter: blur(4px);
 }
-.modal-container {
-  position: relative;
-  min-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-5);
-}
 .modal-panel {
+  position: relative;
   background: var(--color-surface-elevated);
-  backdrop-filter: blur(24px) saturate(140%);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
@@ -55,7 +77,10 @@ const emit = defineEmits(['close'])
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  outline: none;
+  animation: modal-enter var(--duration-base) var(--ease-out);
 }
+.modal-panel:focus { outline: none; }
 .modal-panel--sm { max-width: 420px; }
 .modal-panel--md { max-width: 560px; }
 .modal-panel--lg { max-width: 820px; }
@@ -84,8 +109,8 @@ const emit = defineEmits(['close'])
   justify-content: flex-end;
   gap: var(--space-2);
 }
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity var(--duration-base) var(--ease-out); }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
-.modal-pop-enter-active { transition: transform var(--duration-base) var(--ease-out), opacity var(--duration-base) var(--ease-out); }
-.modal-pop-enter-from { transform: translateY(12px) scale(0.98); opacity: 0; }
+@keyframes modal-enter {
+  from { transform: translateY(12px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
 </style>

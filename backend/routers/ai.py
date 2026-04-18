@@ -1,8 +1,11 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from backend.database import get_db
 from backend.services.ai_service import AIService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
@@ -32,13 +35,20 @@ class DailyAdviceRequest(BaseModel):
     fitness_summary: str
 
 
+def _handle_ai_error(e: Exception):
+    logger.exception("AI service error")
+    if isinstance(e, ValueError):
+        raise HTTPException(status_code=400, detail=str(e))
+    raise HTTPException(status_code=500, detail=f"AI 服务调用失败: {e}")
+
+
 @router.post("/analyze-jd")
 async def analyze_jd(payload: JDAnalysisRequest, db: Session = Depends(get_db)):
     try:
         service = AIService(db)
         return await service.analyze_jd(payload.jd_text, payload.resume_text)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        _handle_ai_error(e)
 
 
 @router.post("/generate-questions")
@@ -49,8 +59,8 @@ async def generate_questions(payload: InterviewGenRequest, db: Session = Depends
             payload.position, payload.jd_text, payload.question_count
         )
         return {"questions": questions}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        _handle_ai_error(e)
 
 
 @router.post("/mock-interview")
@@ -59,8 +69,8 @@ async def mock_interview(payload: MockInterviewRequest, db: Session = Depends(ge
         service = AIService(db)
         reply = await service.mock_interview_reply(payload.history, payload.user_answer)
         return {"reply": reply}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        _handle_ai_error(e)
 
 
 @router.post("/estimate-calories")
@@ -69,8 +79,8 @@ async def estimate_calories(payload: CalorieEstimateRequest, db: Session = Depen
         service = AIService(db)
         calories = await service.estimate_calories(payload.food_description)
         return {"calories": calories}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        _handle_ai_error(e)
 
 
 @router.post("/daily-advice")
@@ -79,5 +89,5 @@ async def daily_advice(payload: DailyAdviceRequest, db: Session = Depends(get_db
         service = AIService(db)
         advice = await service.daily_advice(payload.job_summary, payload.fitness_summary)
         return {"advice": advice}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        _handle_ai_error(e)
